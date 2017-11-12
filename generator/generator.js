@@ -5,14 +5,21 @@ var download = require('download');
 
 var templates = {
 	sketchjs: loadFile('templates/sketch.js'),
+  stylescss: loadFile('templates/styles.css'),
 	indexhtml: loadFile('templates/index.html'),
-	indexhtmlb: loadFile('templates/index-bundle.html')
+	indexhtmlb: loadFile('templates/index-bundle.html'),
+  scratchPadmd: loadFile('templates/scratchPad.md'),
+  outlinemd: loadFile('templates/outline.md'),
+  readmemd: loadFile('templates/README.md')
 }
 
 var libraries = {
 	p5js: loadFile('libraries/p5.js'),
 	p5domjs: loadFile('libraries/p5.dom.js'),
-	p5soundjs: loadFile('libraries/p5.sound.js')
+	p5soundjs: loadFile('libraries/p5.sound.js'),
+  bootstrapcss: loadFile('libraries/bootstrap.min.css'),
+  bootstrapjs: loadFile('libraries/bootstrap.min.js'),
+  jqueryjs: loadFile('libraries/jquery.min.js')
 }
 
 var generator = {
@@ -24,24 +31,38 @@ var generator = {
 
 		mkdir(collection, function() {
 			write(collection + '/.p5rc', JSON.stringify(p5rc, null, 2));
-			createLibraries(collection);
+      //puts dup json file in main DIR
+      mkdir(collection + '/main', function(){
+        write(collection + '/main/p5rc.json', JSON.stringify(p5rc, null, 2));
+      });
 		});
+
 	},
 	project: function(project, opt) {
 
-		templates.indexhtml = templates.indexhtml.replace('{{project-title}}', project);
-		templates.indexhtmlb = templates.indexhtmlb.replace('{{project-title}}', project);
+		templates.indexhtml = templates.indexhtml.replace(/\{\{project\-title\}\}/gi, project);
+		templates.indexhtmlb = templates.indexhtmlb.replace(/\{\{project\-title\}\}/gi, project);
+    templates.outlinemd = templates.outlinemd.replace(/\{\{project\-title\}\}/gi, project);
+
 
 		mkdir(project, function() {
 			if(opt.bundle) {
 				createLibraries(project)
 				write(project + '/sketch.js', templates.sketchjs);
 				write(project + '/index.html', templates.indexhtmlb);
+        write(project + '/styles.css', templates.stylescss);
+        write(project + '/scratchPad.md', templates.scratchPadmd);
+        write(project + '/outline.md', templates.outlinemd);
+        write(project + '/README.md', templates.readmemd);
+        mkdir(project + '/classes');
 			}
 			else {
 				var p5rc = JSON.parse(fs.readFileSync('.p5rc', 'utf-8'));
 				p5rc.projects.push(project);
 				write('.p5rc', JSON.stringify(p5rc, null, 2));
+        //puts dup json file in main DIR
+        write('main/p5rc.json', JSON.stringify(p5rc, null, 2));
+
 
 				if (opt.es6) {
 					write(project + '/sketch.es6', templates.sketchjs);
@@ -50,6 +71,11 @@ var generator = {
 					write(project + '/sketch.js', templates.sketchjs);
 				}
 				write(project + '/index.html', templates.indexhtml);
+        write(project + '/styles.css', templates.stylescss);
+        write(project + '/scratchPad.md', templates.scratchPadmd);
+        write(project + '/outline.md', templates.outlinemd);
+        write(project + '/README.md', templates.readmemd);
+        mkdir(project + '/classes');
 			}
 
 		});
@@ -92,6 +118,9 @@ function createLibraries(dirName) {
 		write(dirName + '/libraries/p5.js', libraries.p5js);
 		write(dirName + '/libraries/p5.sound.js', libraries.p5soundjs);
 		write(dirName + '/libraries/p5.dom.js', libraries.p5domjs);
+    write(dirName + '/libraries/bootstrap.min.css', libraries.bootstrapcss);
+    write(dirName + '/libraries/bootstrap.min.js', libraries.bootstrapjs);
+    write(dirName + '/libraries/jquery.min.js', libraries.jqueryjs);
 	});
 }
 
